@@ -2,6 +2,8 @@ var express = require("express");
 var router = express.Router();
 var Campground = require("../models/campground");
 var middleware = require("../middleware");
+var User = require("../models/user");
+var Notification = require("../models/notification");
 
 //INDEX - show all campgrounds
 router.get("/", function (req, res){
@@ -51,7 +53,7 @@ router.get("/", function (req, res){
 
 
 //CREATE - add new campgrounds to database
-router.post("/", middleware.isLoggedIn, function(req, res){
+router.post("/", middleware.isLoggedIn, async function(req, res){
     var name = req.body.name;
     var price = req.body.price;
     var image = req.body.image;
@@ -60,18 +62,28 @@ router.post("/", middleware.isLoggedIn, function(req, res){
         id: req.user._id,
         username: req.user.username
     }
-    var newCampgound = {name: name, price: price, image: image, description: desc, author: author};
-    
-    Campground.create(newCampgound, function(err, newlyCreated){
-       if(err) {
-           console.log(err);
-       }
-       else{
-           req.flash("success", "Campground created successfully!");
-           res.redirect("/campgrounds");
-       }
-    });
-});
+    var newCampground = {name: name, price: price, image: image, description: desc, author: author};
+    try {
+        let campground = await Campground.create(newCampground);
+        let user = await User.findById(req.user._id).populate('followers').exec();
+        let newNotification = {
+          username: req.user.username,
+          campgroundId: campground.id
+        }
+        for(const follower of user.followers) {
+          let notification = await Notification.create(newNotification);
+          follower.notifications.push(notification);
+          follower.save();
+        }
+  
+        //redirect back to campgrounds page
+        req.flash("success", "Campground created successfully!");
+        res.redirect("/campgrounds");
+      } catch(err) {
+        req.flash('error', err.message);
+        res.redirect('back');
+      }
+  });
 
 //NEW - show form to create new campground
 router.get("/new", middleware.isLoggedIn, function(req, res){

@@ -6,7 +6,58 @@
             <div class="thumbnail">
                 <h1><%= user.firstName + " " + user.lastName  %></h1>
                 <img src="/defaultPic/default.jpg" alt="user profile image">
-                <div class="caption"><a href="mailto:<%= user.email %>"><%= user.email %></a></div>
+                <form action="/follow/<%= user._id %>" method="POST">
+                    <div class="btn-group">
+                        <% if (currentUser && user.followers.some(function(follow) {
+                            return follow.equals(currentUser._id)
+                        })) { %>
+                            <button class="btn btn-sm btn-primary">
+                                <i class="fas fa-thumbs-up"></i> Followed (<%= user.followers.length %>)
+                            </button>
+                        <% } else { %>
+                            <button class="btn btn-sm btn-secondary">
+                                <i class="fas fa-thumbs-up"></i> Follow (<%= user.followers.length %>)
+                            </button>
+                        <% } %>
+                            <button type="button" class="btn btn-sm btn-default" data-toggle="modal" data-target="#userFollowers">See Followers</button>
+                    </div>
+                </form>
+            </div>
+            <!-- User Followers Modal -->
+            <div id="userFollowers" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Followers: <%= user.followers.length %></h4>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Followed by:</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <% user.followers.forEach(function(follower){ %>
+                                    <tr>
+                                        <td><span class="badge"><i class="fas fa-user"></i></span> <%= follower.username %></td>
+                                    </tr>
+                                <% }); %>
+                                <% if (user.followers.length === 0) { %>
+                                    <tr>
+                                        <td><em>No followers yet.</em></td>
+                                    </tr>
+                                <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum
         </div>

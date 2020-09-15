@@ -5,11 +5,8 @@ var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
 var flash = require("connect-flash");
 var passport = require("passport");
-var cookieParser = require("cookie-parser");
 var LocalStrategy = require("passport-local");
 var methodOverride = require("method-override");
-var Campground = require("./models/campground");
-var Comment = require("./models/comment");
 var User = require("./models/user");
 var seedDB = require("./seeds");
 
@@ -52,8 +49,16 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-app.use(function(req, res, next){
+app.use(async function(req, res, next){
     res.locals.currentUser = req.user;
+    if(req.user){
+        try{
+            let user = await User.findById(req.user._id).populate('notifications', null, { isRead: false }).exec();
+            res.locals.notifications = user.notifications.reverse();
+        }catch(err){
+            console.log(err.message);
+        }
+    }
     res.locals.error = req.flash("error");
     res.locals.success = req.flash("success");
     next();
